@@ -1,4 +1,4 @@
-gofastr   [![Follow](https://img.shields.io/twitter/follow/tylerrinker.svg?style=social)](https://twitter.com/intent/follow?screen_name=tylerrinker)
+gofastr   
 ============
 
 
@@ -9,9 +9,9 @@ developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repo
 Status](https://travis-ci.org/trinker/gofastr.svg?branch=master)](https://travis-ci.org/trinker/gofastr)
 [![Coverage
 Status](https://coveralls.io/repos/trinker/gofastr/badge.svg?branch=master)](https://coveralls.io/r/trinker/gofastr?branch=master)
-<a href="https://img.shields.io/badge/Version-0.2.1-orange.svg"><img src="https://img.shields.io/badge/Version-0.2.1-orange.svg" alt="Version"/></a>
-</p>
-<img src="inst/gofastr_logo/r_gofastr.png" width="150" alt="readability Logo">
+[![](http://cranlogs.r-pkg.org/badges/gofastr)](https://cran.r-project.org/package=gofastr)
+
+![](tools/gofastr_logo/r_gofastr.png)
 
 **gofastr** is designed to do one thing really well...make a
 `DocumentTermMatrix`. It harnesses the power
@@ -120,7 +120,7 @@ are summarized in the table below:
 <tr class="even">
 <td><code>sub_in_na</code></td>
 <td>manipulation</td>
-<td>Sub missing (<code>NA</code>) for regex matches (defaut: non-content elements)</td>
+<td>Sub missing (<code>NA</code>) for regex matches (default: non-content elements)</td>
 </tr>
 </tbody>
 </table>
@@ -161,16 +161,16 @@ DocumentTerm/TermDocument Matrices
 
     (w <-with(presidential_debates_2012, q_dtm(dialogue, paste(time, tot, sep = "_"))))
 
-    ## <<DocumentTermMatrix (documents: 2912, terms: 3376)>>
-    ## Non-/sparse entries: 42057/9788855
+    ## <<DocumentTermMatrix (documents: 2912, terms: 3377)>>
+    ## Non-/sparse entries: 42058/9791766
     ## Sparsity           : 100%
     ## Maximal term length: 16
     ## Weighting          : term frequency (tf)
 
     (x <- with(presidential_debates_2012, q_tdm(dialogue, paste(time, tot, sep = "_"))))
 
-    ## <<TermDocumentMatrix (terms: 3376, documents: 2912)>>
-    ## Non-/sparse entries: 42057/9788855
+    ## <<TermDocumentMatrix (terms: 3377, documents: 2912)>>
+    ## Non-/sparse entries: 42058/9791766
     ## Sparsity           : 100%
     ## Maximal term length: 16
     ## Weighting          : term frequency (tf)
@@ -221,10 +221,8 @@ weighting functions. This is done post-hoc of creation.
     with(presidential_debates_2012, q_dtm(dialogue, paste(time, tot, sep = "_"))) %>%
         tm::weightTfIdf()
 
-    ## Warning in tm::weightTfIdf(.): empty document(s): time 1_88.1
-
-    ## <<DocumentTermMatrix (documents: 2912, terms: 3376)>>
-    ## Non-/sparse entries: 42057/9788855
+    ## <<DocumentTermMatrix (documents: 2912, terms: 3377)>>
+    ## Non-/sparse entries: 42058/9791766
     ## Sparsity           : 100%
     ## Maximal term length: 16
     ## Weighting          : term frequency - inverse document frequency (normalized) (tf-idf)
@@ -296,8 +294,8 @@ row/column sum greater than 1) to eliminate the warning:
         filter_documents() %>%
         tm::weightTfIdf()
 
-    ## <<DocumentTermMatrix (documents: 2911, terms: 3376)>>
-    ## Non-/sparse entries: 42057/9785479
+    ## <<DocumentTermMatrix (documents: 2912, terms: 3377)>>
+    ## Non-/sparse entries: 42058/9791766
     ## Sparsity           : 100%
     ## Maximal term length: 16
     ## Weighting          : term frequency - inverse document frequency (normalized) (tf-idf)
@@ -366,10 +364,7 @@ parameters/hyper-parameters are selected with little regard to analysis.
 
     ## Plot the Topics Per Person_Time
     topics <- posterior(lda_model, doc_term_mat)$topics
-    topic_dat <- add_rownames(as.data.frame(topics), "Person_Time")
-
-    ## Warning: Deprecated, use tibble::rownames_to_column() instead.
-
+    topic_dat <- tibble::rownames_to_column(as.data.frame(topics), "Person_Time")
     colnames(topic_dat)[-1] <- apply(terms(lda_model, 10), 2, paste, collapse = ", ")
 
     gather(topic_dat, Topic, Proportion, -c(Person_Time)) %>%
@@ -384,7 +379,7 @@ parameters/hyper-parameters are selected with little regard to analysis.
             guides(fill=FALSE) +
             xlab("Proportion")
 
-![](inst/figure/unnamed-chunk-12-1.png)
+![](tools/figure/unnamed-chunk-45-1.png)
 
 ### LDAvis of Model
 
@@ -405,16 +400,13 @@ faster (the creation of a corpus is expensive) and requires
 significantly less code.
 
     pacman::p_load(gofastr, tm)
-    pd <- presidential_debates_2012
+    pd <- as.data.frame(presidential_debates_2012, stringsAsFactors = FALSE)
 
     ## tm Timing
     tic <- Sys.time()
     rownames(pd) <- paste("docs", 1:nrow(pd))
-
-    ## Warning: Setting row names on a tibble is deprecated.
-
     pd[['groups']] <- with(pd, paste(time, tot, sep = "_"))
-    pd <- Corpus(DataframeSource(pd[, 5:6, drop=FALSE]))
+    pd <- Corpus(DataframeSource(setNames(pd[, 5:6, drop=FALSE], c('text', 'doc_id'))))
 
     (out <- DocumentTermMatrix(pd,
         control = list(
@@ -426,15 +418,15 @@ significantly less code.
         )
     ) )
 
-    ## <<DocumentTermMatrix (documents: 2912, terms: 3243)>>
-    ## Non-/sparse entries: 22420/9421196
+    ## <<DocumentTermMatrix (documents: 2912, terms: 3141)>>
+    ## Non-/sparse entries: 19349/9127243
     ## Sparsity           : 100%
     ## Maximal term length: 16
     ## Weighting          : term frequency (tf)
 
     difftime(Sys.time(), tic)
 
-    ## Time difference of 9.652829 secs
+    ## Time difference of 0.06804895 secs
 
     ## gofastr Timing
     tic <- Sys.time()
@@ -449,21 +441,18 @@ significantly less code.
 
     difftime(Sys.time(), tic)
 
-    ## Time difference of 0.1791401 secs
+    ## Time difference of 0.195137 secs
 
 ### With Stemming
 
     pacman::p_load(gofastr, tm)
-    pd <- presidential_debates_2012
+    pd <- as.data.frame(presidential_debates_2012, stringsAsFactors = FALSE)
 
     ## tm Timing
     tic <- Sys.time()
     rownames(pd) <- paste("docs", 1:nrow(pd))
-
-    ## Warning: Setting row names on a tibble is deprecated.
-
     pd[['groups']] <- with(pd, paste(time, tot, sep = "_"))
-    pd <- Corpus(DataframeSource(pd[, 5:6, drop=FALSE]))
+    pd <- Corpus(DataframeSource(setNames(pd[, 5:6, drop=FALSE], c('text', 'doc_id'))))
     pd <- tm_map(pd, stemDocument)
 
     (out <- DocumentTermMatrix(pd,
@@ -476,15 +465,15 @@ significantly less code.
         )
     ) )
 
-    ## <<DocumentTermMatrix (documents: 2912, terms: 2931)>>
-    ## Non-/sparse entries: 22982/8512090
+    ## <<DocumentTermMatrix (documents: 2912, terms: 2855)>>
+    ## Non-/sparse entries: 19468/8294292
     ## Sparsity           : 100%
     ## Maximal term length: 16
     ## Weighting          : term frequency (tf)
 
     difftime(Sys.time(), tic)
 
-    ## Time difference of 11.34504 secs
+    ## Time difference of 0.1631322 secs
 
     ## gofastr Timing
     tic <- Sys.time()
@@ -499,4 +488,4 @@ significantly less code.
 
     difftime(Sys.time(), tic)
 
-    ## Time difference of 0.188133 secs
+    ## Time difference of 0.170115 secs
